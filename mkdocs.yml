@@ -1,0 +1,72 @@
+site_name: 高等数学 · 张宇基础30讲
+site_description: 考研数学知识点总结，基于张宇《基础30讲》整理
+site_author: 考研数学整理
+repo_url: https://github.com/your-username/gaoshu-zhangyu-30
+repo_name: gaoshu-zhangyu-30
+edit_uri: ""
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.tabs.link
+    - header.autohide
+    - navigation.footer
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换至暗色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换至亮色模式
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
+
+nav:
+  - 首页: index.md
+  - 第18讲: 第18讲-多元函数积分学.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css
+
+copyright: Copyright &copy; 2026 考研数学整理
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username/gaoshu-zhangyu-30
+      name: GitHub 仓库
