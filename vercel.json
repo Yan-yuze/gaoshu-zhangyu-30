@@ -1,6 +1,6 @@
 {
   "buildCommand": "uv run mkdocs build",
   "outputDirectory": "site",
-  "installCommand": "uv pip install -r requirements.txt",
+  "installCommand": "uv venv && uv pip install -r requirements.txt",
   "framework": null
 }
