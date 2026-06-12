@@ -1,7 +1,7 @@
 site_name: 高等数学 · 张宇基础30讲
 site_description: 考研数学知识点总结，基于张宇《基础30讲》整理
 site_author: 考研数学整理
-repo_url: https://github.com/your-username/gaoshu-zhangyu-30
+repo_url: https://github.com/Yan-yuze/gaoshu-zhangyu-30
 repo_name: gaoshu-zhangyu-30
 edit_uri: ""
 
@@ -68,5 +68,5 @@ copyright: Copyright &copy; 2026 考研数学整理
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/gaoshu-zhangyu-30
+      link: https://github.com/Yan-yuze
       name: GitHub 仓库
