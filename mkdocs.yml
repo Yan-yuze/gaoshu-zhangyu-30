@@ -36,7 +36,7 @@ theme:
 
 nav:
   - 首页: index.md
-  - 第18讲: 第18讲-多元函数积分学.md
+  - 第18讲：多元函数积分学(codex版): 第18讲-多元函数积分学.md
 
 markdown_extensions:
   - admonition
