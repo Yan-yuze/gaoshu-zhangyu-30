@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文档管理 · 高数笔记</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+.header { background: #1a237e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.8; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+/* Token 输入区 */
+.token-box { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.token-box label { font-weight: 600; display: block; margin-bottom: 8px; }
+.token-row { display: flex; gap: 8px; }
+.token-row input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: monospace; }
+.token-row input:focus { outline: none; border-color: #1a237e; }
+.btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.btn-primary { background: #1a237e; color: #fff; }
+.btn-primary:hover { background: #283593; }
+.btn-danger { background: #d32f2f; color: #fff; }
+.btn-danger:hover { background: #c62828; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-outline { background: #fff; color: #333; border: 1px solid #ddd; }
+.btn-outline:hover { background: #f5f5f5; }
+.btn-success { background: #2e7d32; color: #fff; }
+.btn-success:hover { background: #1b5e20; }
+.hidden { display: none !important; }
+
+/* 面包屑 */
+.breadcrumb { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; }
+.breadcrumb a { color: #1a237e; text-decoration: none; cursor: pointer; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb .sep { color: #999; }
+
+/* 文件列表 */
+.file-list { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+.file-item { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.15s; gap: 10px; }
+.file-item:last-child { border-bottom: none; }
+.file-item:hover { background: #f8f9ff; }
+.file-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.file-name { flex: 1; font-size: 14px; }
+.file-name .ext { color: #999; font-size: 12px; }
+.file-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.empty-msg { padding: 40px; text-align: center; color: #999; }
+
+/* 对话框 */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; min-width: 380px; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.modal h3 { margin-bottom: 16px; font-size: 18px; }
+.modal label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+.modal input, .modal select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 12px; }
+.modal input:focus { outline: none; border-color: #1a237e; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.modal .path-preview { background: #f5f5f5; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #666; margin-bottom: 12px; font-family: monospace; word-break: break-all; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #333; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 2000; animation: fadeIn 0.3s; }
+.toast.success { background: #2e7d32; }
+.toast.error { background: #d32f2f; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 状态提示 */
+.status-bar { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; color: #666; display: flex; justify-content: space-between; align-items: center; }
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  .modal { min-width: auto; margin: 0 16px; }
+  .file-actions .btn { padding: 4px 8px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📂 文档管理</h1>
+  <span class="subtitle">高等数学 · 张宇基础30讲</span>
+</div>
+
+<div class="container">
+
+  <!-- Token -->
+  <div class="token-box" id="tokenBox">
+    <label>🔑 GitHub Token</label>
+    <div class="token-row">
+      <input type="password" id="tokenInput" placeholder="输入你的 GitHub token（ghp_...）" autocomplete="off">
+      <button class="btn btn-primary" onclick="connect()">连接</button>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:#999;">
+      Token 仅存储在浏览器本地，不会上传到服务器。
+      <a href="https://github.com/settings/tokens" target="_blank" style="color:#1a237e;">去生成 token →</a>
+    </div>
+  </div>
+
+  <!-- 状态栏 -->
+  <div class="status-bar hidden" id="statusBar">
+    <span id="statusText">✅ 已连接</span>
+    <div>
+      <button class="btn btn-sm btn-outline" onclick="showNewFolder()">📁 新建文件夹</button>
+      <button class="btn btn-sm btn-outline" onclick="showNewFile()">📄 新建文件</button>
+      <button class="btn btn-sm btn-outline" onclick="goTo('')">🏠 根目录</button>
+    </div>
+  </div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb hidden" id="breadcrumb"></div>
+
+  <!-- 文件列表 -->
+  <div class="file-list" id="fileList">
+    <div class="empty-msg">🔑 请输入 GitHub Token 并点击"连接"</div>
+  </div>
+
+</div>
+
+<!-- 重命名对话框 -->
+<div class="modal-overlay hidden" id="renameModal">
+  <div class="modal">
+    <h3>✏️ 重命名</h3>
+    <label>当前路径</label>
+    <div class="path-preview" id="renamePath"></div>
+    <label>新名称</label>
+    <input type="text" id="renameInput" placeholder="输入新名称，如 第1讲-极限.md">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('renameModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmRename()">确认重命名</button>
+    </div>
+  </div>
+</div>
+
+<!-- 移动对话框 -->
+<div class="modal-overlay hidden" id="moveModal">
+  <div class="modal">
+    <h3>📦 移动到</h3>
+    <label>当前路径</label>
+    <div class="path-preview" id="movePath"></div>
+    <label>目标文件夹</label>
+    <input type="text" id="moveInput" placeholder="如 高等数学/第5章-多元函数积分学">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('moveModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmMove()">确认移动</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新建文件夹对话框 -->
+<div class="modal-overlay hidden" id="newFolderModal">
+  <div class="modal">
+    <h3>📁 新建文件夹</h3>
+    <label>在目录</label>
+    <div class="path-preview" id="newFolderPath"></div>
+    <label>文件夹名称</label>
+    <input type="text" id="newFolderInput" placeholder="如 第2讲-导数">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newFolderModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmNewFolder()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新建文件对话框 -->
+<div class="modal-overlay hidden" id="newFileModal">
+  <div class="modal">
+    <h3>📄 新建文件</h3>
+    <label>在目录</label>
+    <div class="path-preview" id="newFilePath"></div>
+    <label>文件名（含 .md 后缀）</label>
+    <input type="text" id="newFileInput" placeholder="如 第1讲-极限与连续.md">
+    <label>初始内容（Markdown）</label>
+    <textarea id="newFileContent" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:monospace;margin-bottom:12px;" placeholder="# 标题&#10;&#10;内容..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('newFileModal')">取消</button>
+      <button class="btn btn-success" onclick="confirmNewFile()">创建文件</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const OWNER = 'Yan-yuze';
+const REPO = 'gaoshu-zhangyu-30';
+const BRANCH = 'master';
+const DOCS_PATH = 'docs';
+
+let token = localStorage.getItem('gh_token') || '';
+let currentPath = '';
+
+function $(id) { return document.getElementById(id); }
+
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function closeModal(id) { $(id).classList.add('hidden'); }
+
+function openModal(id) { $(id).classList.remove('hidden'); }
+
+// 初始化
+if (token) { $('tokenInput').value = token; connect(); }
+
+async function connect() {
+  token = $('tokenInput').value.trim();
+  if (!token) { showToast('请输入 token', 'error'); return; }
+  localStorage.setItem('gh_token', token);
+  
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('Token 无效或权限不足');
+    $('tokenBox').classList.add('hidden');
+    $('statusBar').classList.remove('hidden');
+    $('breadcrumb').classList.remove('hidden');
+    showToast('✅ 连接成功');
+    goTo('');
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+async function goTo(path) {
+  currentPath = path;
+  renderBreadcrumb();
+  await loadFiles(path);
+}
+
+function renderBreadcrumb() {
+  const bc = $('breadcrumb');
+  const parts = currentPath ? currentPath.split('/') : [];
+  let html = `<a onclick="goTo('')">📂 docs</a>`;
+  let accumulated = '';
+  for (const p of parts) {
+    accumulated += (accumulated ? '/' : '') + p;
+    html += `<span class="sep">/</span><a onclick="goTo('${accumulated}')">${p}</a>`;
+  }
+  bc.innerHTML = html;
+}
+
+async function loadFiles(path) {
+  const fl = $('fileList');
+  fl.innerHTML = '<div class="empty-msg">⏳ 加载中...</div>';
+  
+  try {
+    const apiPath = path ? `${DOCS_PATH}/${path}` : DOCS_PATH;
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${apiPath}?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    
+    if (r.status === 404) {
+      fl.innerHTML = '<div class="empty-msg">📂 此目录为空</div>';
+      return;
+    }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    
+    const data = await r.json();
+    if (!Array.isArray(data)) {
+      // 单个文件 - 不支持直接编辑，返回上级
+      fl.innerHTML = `<div class="empty-msg">📄 这是一个文件，请返回上级目录</div>`;
+      return;
+    }
+    
+    // 排序：文件夹在前，按名称排序
+    data.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+      return a.name.localeCompare(b.name, 'zh-CN');
+    });
+    
+    // 构建当前完整的路径前缀，用于新建文件时自动填入
+    window._currentDir = path;
+    
+    if (data.length === 0) {
+      fl.innerHTML = '<div class="empty-msg">📂 此目录为空</div>';
+      return;
+    }
+    
+    let html = '';
+    for (const item of data) {
+      const isDir = item.type === 'dir';
+      const icon = isDir ? '📁' : '📄';
+      const ext = isDir ? '' : '.' + item.name.split('.').pop();
+      const itemPath = path ? `${path}/${item.name}` : item.name;
+      
+      html += `<div class="file-item" ${isDir ? `onclick="goTo('${itemPath}')"` : ''}>
+        <span class="file-icon">${icon}</span>
+        <span class="file-name">
+          ${item.name}${isDir ? '' : ''}
+          ${isDir ? '' : `<span class="ext">${ext}</span>`}
+        </span>
+        <div class="file-actions">
+          <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();showRename('${itemPath}', '${item.name}', ${isDir})">✏️</button>
+          <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();showMove('${itemPath}', '${item.name}')">📦</button>
+          ${isDir ? '' : `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();editFile('${itemPath}')">📝</button>`}
+        </div>
+      </div>`;
+    }
+    fl.innerHTML = html;
+  } catch(e) {
+    fl.innerHTML = `<div class="empty-msg">❌ 加载失败：${e.message}</div>`;
+  }
+}
+
+// 重命名
+function showRename(path, name, isDir) {
+  $('renamePath').textContent = `docs/${path}`;
+  $('renameInput').value = name;
+  $('renameInput').dataset.path = path;
+  $('renameInput').dataset.isDir = isDir;
+  openModal('renameModal');
+}
+
+async function confirmRename() {
+  const path = $('renameInput').dataset.path;
+  const oldName = path.split('/').pop();
+  const parentPath = path.substring(0, path.length - oldName.length - 1) || '';
+  const newName = $('renameInput').value.trim();
+  if (!newName) { showToast('请输入新名称', 'error'); return; }
+  
+  const oldApiPath = DOCS_PATH + (parentPath ? '/' + parentPath + '/' + oldName : '/' + oldName);
+  const newApiPath = DOCS_PATH + (parentPath ? '/' + parentPath + '/' + newName : '/' + newName);
+  
+  closeModal('renameModal');
+  showToast('⏳ 正在重命名...');
+  
+  try {
+    // 先获取文件的 SHA
+    const r1 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${oldApiPath}?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r1.ok) throw new Error('无法获取文件信息');
+    const data = await r1.json();
+    
+    if (Array.isArray(data)) {
+      // 是目录 - GitHub API 不支持直接重命名目录
+      showToast('❌ GitHub API 不支持直接重命名文件夹，请逐个移动里面的文件', 'error');
+      return;
+    }
+    
+    const sha = data.sha;
+    const content = data.content; // base64
+    
+    // 在新路径创建文件
+    const r2 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${newApiPath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `rename: ${oldName} → ${newName}`,
+        content: content,
+        branch: BRANCH
+      })
+    });
+    if (!r2.ok) throw new Error('创建新文件失败');
+    
+    // 删除旧文件
+    const r3 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${oldApiPath}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `delete: ${oldName}`,
+        sha: sha,
+        branch: BRANCH
+      })
+    });
+    if (!r3.ok) throw new Error('删除旧文件失败');
+    
+    showToast(`✅ 已重命名为 ${newName}`);
+    goTo(parentPath);
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+// 移动
+function showMove(path, name) {
+  $('movePath').textContent = `docs/${path}`;
+  const parts = path.split('/');
+  parts.pop();
+  const parentPath = parts.join('/');
+  $('moveInput').value = parentPath;
+  $('moveInput').dataset.path = path;
+  $('moveInput').dataset.name = name;
+  openModal('moveModal');
+}
+
+async function confirmMove() {
+  const path = $('moveInput').dataset.path;
+  const name = $('moveInput').dataset.name;
+  const targetDir = $('moveInput').value.trim().replace(/\/+$/, '');
+  if (!targetDir) { showToast('请输入目标目录', 'error'); return; }
+  
+  const oldApiPath = DOCS_PATH + '/' + path;
+  const newApiPath = DOCS_PATH + '/' + targetDir + '/' + name;
+  
+  closeModal('moveModal');
+  showToast('⏳ 正在移动...');
+  
+  try {
+    const r1 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${oldApiPath}?ref=${BRANCH}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r1.ok) throw new Error('无法获取文件信息');
+    const data = await r1.json();
+    
+    if (Array.isArray(data)) {
+      showToast('❌ 目录移动暂不支持，请逐个移动文件', 'error');
+      return;
+    }
+    
+    const sha = data.sha;
+    const content = data.content;
+    
+    // 创建到新位置
+    const r2 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${newApiPath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `move: ${name} → ${targetDir}/`,
+        content: content,
+        branch: BRANCH
+      })
+    });
+    if (!r2.ok) throw new Error('创建到新位置失败');
+    
+    // 删除旧文件
+    const r3 = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${oldApiPath}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `delete: ${name} from old location`,
+        sha: sha,
+        branch: BRANCH
+      })
+    });
+    if (!r3.ok) throw new Error('删除旧文件失败');
+    
+    showToast(`✅ 已移动到 ${targetDir}/`);
+    // 回到目标目录的上级
+    const parentDir = targetDir.split('/').slice(0, -1).join('/');
+    goTo(parentDir);
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+// 编辑文件（打开 GitHub 网页编辑器）
+function editFile(path) {
+  const url = `https://github.com/${OWNER}/${REPO}/edit/${BRANCH}/${DOCS_PATH}/${path}`;
+  window.open(url, '_blank');
+}
+
+// 新建文件夹
+function showNewFolder() {
+  $('newFolderPath').textContent = `docs/${currentPath || '(根目录)'}`;
+  $('newFolderInput').value = '';
+  openModal('newFolderModal');
+}
+
+async function confirmNewFolder() {
+  const name = $('newFolderInput').value.trim();
+  if (!name) { showToast('请输入文件夹名称', 'error'); return; }
+  
+  // GitHub 不支持创建空目录，需要通过创建文件来"创建"目录
+  const dirPath = currentPath ? `${currentPath}/${name}` : name;
+  const filePath = `${dirPath}/.gitkeep`;
+  const content = btoa('');
+  
+  closeModal('newFolderModal');
+  showToast('⏳ 正在创建文件夹...');
+  
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DOCS_PATH}/${filePath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `创建文件夹 ${name}`,
+        content: content,
+        branch: BRANCH
+      })
+    });
+    if (!r.ok) throw new Error('创建失败');
+    
+    showToast(`✅ 已创建文件夹 ${name}/`);
+    goTo(currentPath);
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+// 新建文件
+function showNewFile() {
+  $('newFilePath').textContent = `docs/${currentPath || '(根目录)'}`;
+  $('newFileInput').value = '';
+  $('newFileContent').value = '';
+  openModal('newFileModal');
+}
+
+async function confirmNewFile() {
+  const name = $('newFileInput').value.trim();
+  const content = $('newFileContent').value;
+  if (!name) { showToast('请输入文件名', 'error'); return; }
+  
+  const filePath = currentPath ? `${currentPath}/${name}` : name;
+  
+  closeModal('newFileModal');
+  showToast('⏳ 正在创建文件...');
+  
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DOCS_PATH}/${filePath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `创建文件 ${name}`,
+        content: btoa(unescape(encodeURIComponent(content))),
+        branch: BRANCH
+      })
+    });
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.message || '创建失败');
+    }
+    
+    showToast(`✅ 已创建 ${name}`);
+    goTo(currentPath);
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+// 点击遮罩关闭对话框
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+  });
+});
+
+// Enter 键提交
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (!$('renameModal').classList.contains('hidden')) confirmRename();
+    else if (!$('moveModal').classList.contains('hidden')) confirmMove();
+    else if (!$('newFolderModal').classList.contains('hidden')) confirmNewFolder();
+    else if (!$('newFileModal').classList.contains('hidden')) confirmNewFile();
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay').forEach(el => el.classList.add('hidden'));
+  }
+});
+</script>
+</body>
+</html>
